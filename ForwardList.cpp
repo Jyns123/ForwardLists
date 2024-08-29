@@ -27,7 +27,8 @@ public:
     void reverse();
     void clear();
     void display();
-
+    //Selection sort
+    void selectionSort();
     // Acceso
     int size();
     int front();
@@ -44,9 +45,11 @@ public:
     ListNode* mergeTwoLists(ListNode* list1, ListNode* list2);
     int GCD(int val1, int val2);
     ListNode* insertGreatestCommonDivisors();
-    ListNode* swapPairs(ListNode* head);
-    ListNode* deleteDuplicates(ListNode* head);
-
+    ListNode* swapPairs();
+    ListNode* deleteDuplicates();
+    ListNode* rotateRight(ListNode* head, int k);
+    ListNode* deleteDuplicates2(ListNode* head);
+    ListNode* partition(ListNode* head, int x);
 };
 
 // Implementación de funciones
@@ -106,28 +109,40 @@ void ListNodeOperations::connect(int val) {
 }
 
 void ListNodeOperations::swap(int index1, int index2) {
-    if (index1 < 0 || index2 < 0) {
+    if (index1 < 0 || index2 < 0 || index1 == index2) {
         return;
     }
 
+    ListNode* prev1 = nullptr;
     ListNode* curr1 = head;
-    ListNode* curr2 = head;
-
     for (int i = 0; i < index1 && curr1; i++) {
+        prev1 = curr1;
         curr1 = curr1->next;
     }
 
+    ListNode* prev2 = nullptr;
+    ListNode* curr2 = head;
     for (int i = 0; i < index2 && curr2; i++) {
+        prev2 = curr2;
         curr2 = curr2->next;
     }
 
     if (curr1 && curr2) {
-        int temp = curr1->val;
-        curr1->val = curr2->val;
-        curr2->val = temp;
+        if (prev1) {
+            prev1->next = curr2;
+        } else {
+            head = curr2;
+        }
+        if (prev2) {
+            prev2->next = curr1;
+        } else {
+            head = curr1;
+        }
+        ListNode* temp = curr2->next;
+        curr2->next = curr1->next;
+        curr1->next = temp;
     }
 }
-
 
 void ListNodeOperations::removeElements(int target) {
     while (head && head->val == target) {
@@ -148,13 +163,12 @@ void ListNodeOperations::removeElements(int target) {
     }
 }
 
-
 void ListNodeOperations::reverse() {
     ListNode* prev = nullptr;
     ListNode* current1 = head;
     ListNode* siguiente = nullptr;
 
-    while(current1 != nullptr) {
+    while (current1 != nullptr) {
         siguiente = current1->next;
         current1->next = prev;
         prev = current1;
@@ -188,6 +202,28 @@ void ListNodeOperations::display() {
     cout << endl;
 }
 
+//
+void ListNodeOperations::selectionSort() {
+    if (!head || !head->next) return;
+
+    ListNode* curr = head;
+    while (curr) {
+        ListNode* minNode = curr;
+        ListNode* nextNode = curr->next;
+
+        while (nextNode) {
+            if (nextNode->val < minNode->val) {
+                minNode = nextNode;
+            }
+            nextNode = nextNode->next;
+        }
+
+        // Intercambia los valores
+        swap(curr->val, minNode->val);
+        curr = curr->next;
+    }
+}
+
 // Acceso
 int ListNodeOperations::size() {
     ListNode* curr = head;
@@ -219,7 +255,7 @@ int ListNodeOperations::back() {
 
 int& ListNodeOperations::operator[](int index) {
     if (index < 0) {
-        throw out_of_range("no negativo");
+        throw out_of_range("Índice no válido");
     }
 
     ListNode* current = head;
@@ -231,7 +267,7 @@ int& ListNodeOperations::operator[](int index) {
     }
 
     if (current == nullptr) {
-        throw out_of_range("Fuera de rango");
+        throw out_of_range("Índice fuera de rango");
     }
 
     return current->val;
@@ -379,18 +415,17 @@ ListNode* ListNodeOperations::mergeTwoLists(ListNode* list1, ListNode* list2) {
     return mergedList;
 }
 
-int ListNodeOperations::GCD(int val1, int val2) { // 40 55 
+int ListNodeOperations::GCD(int val1, int val2) {
     if(val2 > val1){
         return GCD(val2, val1);
     }
     if(val1*val2==0){
         return 0;
     }
-//55 40
     while (val2 != 0) {
-        int temp = val2;// temp = 40                //temp = 15         //temp = 10      //temp=5
-        val2 = val1 % val2; // 55%40, val2 = 15     //val2 = 40%15= 10  //val2 = 15%10=5 //val2 = 10%5 = 0
-        val1 = temp;//val1,55 = 40                  //val1 =15          //val1 = 10      //val1 = 5  
+        int temp = val2;
+        val2 = val1 % val2;
+        val1 = temp;
     }
     return val1;
 }
@@ -399,73 +434,156 @@ ListNode* ListNodeOperations::insertGreatestCommonDivisors() {
     if (!head) {
         return nullptr;
     }
-    ListNode* dummy = head;
     ListNode* curr = head;
     while (curr && curr->next) {
         int val1 = curr->val;
         int val2 = curr->next->val;
-        while (val2 != 0) {
-            int temp = val2;
-            val2 = val1 % val2;
-            val1 = temp;
-        }
-        ListNode* temp = new ListNode(val1);
+        int gcd = GCD(val1, val2);
+        ListNode* temp = new ListNode(gcd);
         temp->next = curr->next;
         curr->next = temp;
         curr = temp->next;
     }
-    return dummy;
+    return head;
 }
 
-ListNode* ListNodeOperations::swapPairs(ListNode* head){
-    if(!head){
-        return nullptr;
-    }
-    ListNode* dummy = head;
-    ListNode* curr = head;
-    while (curr && curr->next) {
-        swap(curr->val, curr->next->val);
-        curr = curr->next->next;
-    }
-    return dummy;
-}
-
-ListNode* ListNodeOperations::deleteDuplicates(ListNode* head){
-    if(!head){
-        return nullptr;
-    }
-    if(!head->next){
+ListNode* ListNodeOperations::swapPairs() {
+    if (!head || !head->next) {
         return head;
     }
-    ListNode* curr = head;
-    ListNode* dummy = head;
+    
+    ListNode* dummy = new ListNode(0);
+    dummy->next = head;
+    ListNode* prev = dummy;
+    
+    while (head && head->next) {
+        ListNode* first = head;
+        ListNode* second = head->next;
+        
+        prev->next = second;
+        first->next = second->next;
+        second->next = first;
+        
+        prev = first;
+        head = first->next;
+    }
+    
+    ListNode* newHead = dummy->next;
+    delete dummy;
+    return newHead;
+}
 
-    while(curr->next){
-        if(curr->val==curr->next->val){
-            ListNode* temp = curr -> next;
-            curr -> next = temp -> next;
+ListNode* ListNodeOperations::deleteDuplicates() {
+    if (!head) return nullptr;
+    
+    ListNode* curr = head;
+    while (curr && curr->next) {
+        if (curr->val == curr->next->val) {
+            ListNode* temp = curr->next;
+            curr->next = temp->next;
             delete temp;
-            curr = curr -> next;
+        } else {
+            curr = curr->next;
         }
     }
-    return dummy;
+    return head;
+}
+
+ListNode* ListNodeOperations::rotateRight(ListNode* head, int k) {
+    if (!head) {
+        return head;
+    }
+
+    ListNode* curr = head;
+    int length = 1;
+    while (curr->next) {
+        curr = curr->next;
+        length++;
+    }
+
+    k = k % length;
+    if (k == 0) {
+        return head; 
+    }
+
+    ListNode* tail = head;
+    for (int i = 1; i < length - k; i++) {
+        tail = tail->next;
+    }
+
+    ListNode* newHead = tail->next; 
+    tail->next = nullptr; 
+    curr->next = head; 
+
+    return newHead;
+
+}
+ListNode* ListNodeOperations::deleteDuplicates2(ListNode* head) {
+    if (!head || !head->next) return head;
+
+    ListNode* dummy = new ListNode(0);
+    dummy->next = head;
+    ListNode* prev = dummy;
+
+    while (prev->next) {
+        ListNode* curr = prev->next;
+        bool isDuplicate = false;
+
+        while (curr->next && curr->val == curr->next->val) {
+            ListNode* temp = curr->next;
+            curr->next = curr->next->next;  
+            delete temp; 
+            isDuplicate = true;
+        }
+
+        if (isDuplicate) {
+            prev->next = curr->next;
+            delete curr;
+        } else {
+            prev = prev->next;
+        }
+    }
+
+    ListNode* newHead = dummy->next;
+    delete dummy;  
+    return newHead;
+}
+
+ListNode* ListNodeOperations::partition(ListNode* head, int x) {
+    if (!head || !head->next) return head;
+
+    ListNode* lessHead = new ListNode(0); 
+    ListNode* greaterHead = new ListNode(0); 
+    ListNode* less = lessHead; 
+    ListNode* greater = greaterHead; 
+
+    ListNode* curr = head;
+    while (curr) {
+        if (curr->val < x) {
+            less->next = curr;
+            less = less->next;
+        } else {
+            greater->next = curr;
+            greater = greater->next;
+        }
+        curr = curr->next; 
+    }
+
+    greater->next = nullptr; 
+    less->next = greaterHead->next; 
+
+    ListNode* newHead = lessHead->next; 
+    delete lessHead; 
+    delete greaterHead; 
+
+    return newHead;
 }
 
 
-// Pruebas en main
+
 int main() {
-    ListNode* l1 = new ListNode(1, new ListNode(1, new ListNode(1, new ListNode(2))));
-    ListNode* result = list.deleteDuplicates(l1);
-    cout << "Result of deleteDuplicates: ";
-    while (result) {
-        cout << result->val << " ";
-        result = result->next;
-    }
-    cout << endl;
+    ListNodeOperations list;
 
-
-
-/*
     // Pruebas básicas
     list.pushback(1);
     list.pushback(2);
@@ -491,8 +609,8 @@ int main() {
     cout << "List after swap operation: ";
     list.display();
 
-    list.swapPairs();
-    cout << "List after swapPairs operation: ";
+    list.reverse();
+    cout << "List after reverse operation: ";
     list.display();
 
     list.removeElements(5);
@@ -504,61 +622,51 @@ int main() {
     cout << "List after insertGreatestCommonDivisors operation: ";
     list.display();
 
-    // Test reverse
-    list.reverse();
-    cout << "List after reverse operation: ";
-    list.display();
-
-    // Test access
-    try {
-        cout << "Element at index 0: " << list[0] << endl;
-        cout << "Element at index 1: " << list[1] << endl;
-        cout << "Element at index 2: " << list[2] << endl;
-        cout << "Element at index 3: " << list[3] << endl;
-    } catch (const std::out_of_range& e) {
-        cout << "Error: " << e.what() << endl;
+    // Test swapPairs
+    ListNode* swappedPairsList = list.swapPairs();
+    cout << "List after swapPairs operation: ";
+    while (swappedPairsList) {
+        cout << swappedPairsList->val << " ";
+        swappedPairsList = swappedPairsList->next;
     }
+    cout << endl;
 
-    // Test list properties
-    cout << "Front element: " << list.front() << endl;
-    cout << "Back element: " << list.back() << endl;
-    cout << "Size of the list: " << list.size() << endl;
-    cout << "Is the list empty? " << (list.empty() ? "Yes" : "No") << endl;
+    // Test deleteDuplicates
+    ListNode* l1 = new ListNode(1, new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(3)))));
+    ListNode* uniqueList = list.deleteDuplicates();
+    cout << "Result of deleteDuplicates: ";
+    while (uniqueList) {
+        cout << uniqueList->val << " ";
+        uniqueList = uniqueList->next;
+    }
+    cout << endl;
 
-    // Test addTwoNumbers
-    ListNode* l1 = new ListNode(2, new ListNode(4, new ListNode(3)));
-    ListNode* l2 = new ListNode(5, new ListNode(6, new ListNode(4)));
-    ListNode* result = list.addTwoNumbers(l1, l2);
-    cout << "Result of addTwoNumbers: ";
+    // Clean up
+    list.clear();
+
+    // Test removeNthFromEnd
+    ListNode* l2 = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
+    ListNodeOperations ops;
+    ListNode* result = ops.removeNthFromEnd(l2, 2);
+    cout << "List after removeNthFromEnd operation (removing 2nd from end): ";
     while (result) {
         cout << result->val << " ";
         result = result->next;
     }
     cout << endl;
 
-    // Test mergeTwoLists
-    ListNode* list1 = new ListNode(1, new ListNode(3, new ListNode(5)));
-    ListNode* list2 = new ListNode(2, new ListNode(4, new ListNode(6)));
-    ListNode* merged = list.mergeTwoLists(list1, list2);
-    cout << "Merged list: ";
-    while (merged) {
-        cout << merged->val << " ";
-        merged = merged->next;
-    }
-    cout << endl;
-
-    // Test removeNthFromEnd
-    ListNode* listToRemove = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
-    ListNode* newHead = list.removeNthFromEnd(listToRemove, 2);
-    cout << "List after removing 2nd from end: ";
-    while (newHead) {
-        cout << newHead->val << " ";
-        newHead = newHead->next;
+    // Test rotateRight
+    ListNode* l3 = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
+    ListNode* rotated = ops.rotateRight(l3, 2);
+    cout << "List after rotateRight operation (rotate by 2): ";
+    while (rotated) {
+        cout << rotated->val << " ";
+        rotated = rotated->next;
     }
     cout << endl;
 
     // Clean up
     list.clear();
-*/
     return 0;
 }
+
