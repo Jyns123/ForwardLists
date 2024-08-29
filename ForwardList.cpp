@@ -27,6 +27,9 @@ public:
     void reverse();
     void clear();
     void display();
+    //Jodephus
+    int josephus(int k);
+
     //Selection sort
     void selectionSort();
     // Acceso
@@ -201,6 +204,42 @@ void ListNodeOperations::display() {
     }
     cout << endl;
 }
+
+int ListNodeOperations::josephus(int k) {
+    if (!head || k <= 0) return -1;  // Manejo de errores
+
+    ListNode* curr = head;
+
+    // Crear la lista circular si no está ya conectada
+    while (curr->next) {
+        curr = curr->next;
+    }
+    curr->next = head; // Conectar el último nodo al primer nodo para hacerla circular
+/*
+int josephusPosition(int n) {
+    int L = pow(2, floor(log2(n))); // Mayor potencia de 2 menor o igual a n
+    return 2 * (n - L) + 1;
+}*/
+    // Eliminar nodos en saltos de k-1 hasta que quede solo uno
+    ListNode* prev = nullptr;
+    while (curr != curr->next) {
+        for (int i = 1; i < k; ++i) {
+            prev = curr;
+            curr = curr->next;
+        }
+        // Eliminar el nodo actual
+        prev->next = curr->next;
+        delete curr;
+        curr = prev->next;
+    }
+
+    int survivor = curr->val;  // El valor del último nodo sobreviviente
+    delete curr;               // Eliminar el nodo restante
+    head = nullptr;            // Restablecer la lista a vacía
+
+    return survivor;  // Retorna el valor del sobreviviente
+}
+
 
 //
 void ListNodeOperations::selectionSort() {
