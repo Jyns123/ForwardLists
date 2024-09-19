@@ -310,6 +310,44 @@ public:
 
         return maxLength;
     }
+
+    string intToRoman(int num) {
+        unordered_map<int, string> u = {
+            {1, "I"}, {2, "II"}, {3, "III"}, {4, "IV"}, {5, "V"}, {6, "VI"}, {7, "VII"}, {8, "VIII"}, {9, "IX"}
+        };
+        
+        unordered_map<int, string> d = {
+            {1, "X"}, {2, "XX"}, {3, "XXX"}, {4, "XL"}, {5, "L"}, {6, "LX"}, {7, "LXX"}, {8, "LXXX"}, {9, "XC"}
+        };
+        
+        unordered_map<int, string> c = {
+            {1, "C"}, {2, "CC"}, {3, "CCC"}, {4, "CD"}, {5, "D"}, {6, "DC"}, {7, "DCC"}, {8, "DCCC"}, {9, "CM"}
+        };
+        
+        unordered_map<int, string> m = {
+            {1, "M"}, {2, "MM"}, {3, "MMM"}
+        };
+        
+        string roman = "";
+
+        if (num / 1000 > 0) {
+            roman += m[num / 1000];
+        }
+
+        if ((num % 1000) / 100 > 0) {
+            roman += c[(num % 1000) / 100];
+        }
+
+        if ((num % 100) / 10 > 0) {
+            roman += d[(num % 100) / 10];
+        }
+
+        if (num % 10 > 0) {
+            roman += u[num % 10];
+        }
+
+        return roman;
+    }
 };
 
 class LRUCache {
