@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <list>
+#include <algorithm>
 using namespace std;
 struct ListNode {
     int val;
@@ -348,6 +349,97 @@ public:
 
         return roman;
     }
+
+    bool isValidSudoku(vector<vector<char>>& board) {
+        for (int i = 0; i < 9; i++) {
+            unordered_map<char, bool> ValidRow;   
+            unordered_map<char, bool> ValidCol;   
+            unordered_map<char, bool> ValidBlock; 
+            
+            for (int j = 0; j < 9; j++) {
+                if (board[i][j] != '.') {
+                    if (ValidRow[board[i][j]]) {
+                        return false;
+                    }
+                    ValidRow[board[i][j]] = true;
+                }
+                
+                if (board[j][i] != '.') {
+                    if (ValidCol[board[j][i]]) {
+                        return false;
+                    }
+                    ValidCol[board[j][i]] = true;
+                }
+                
+                int blockRow = 3 * (i / 3) + j / 3;
+                int blockCol = 3 * (i % 3) + j % 3;
+                if (board[blockRow][blockCol] != '.') {
+                    if (ValidBlock[board[blockRow][blockCol]]) {
+                        return false;
+                    }
+                    ValidBlock[board[blockRow][blockCol]] = true;
+                }
+            }
+        }
+        return true;
+    }
+
+    vector<vector<string>> groupAnagrams(vector<string>& strs) {
+        unordered_map<string, vector<string>> anagramGroups; 
+
+        for (int i = 0; i < strs.size(); i++) {
+            string sortedWord = strs[i]; 
+            sort(sortedWord.begin(), sortedWord.end()); 
+
+            if (anagramGroups.find(sortedWord) == anagramGroups.end()) {
+                anagramGroups[sortedWord]; 
+            }
+            anagramGroups[sortedWord].push_back(strs[i]); 
+        }
+
+        vector<vector<string>> result;
+
+        for (auto it = anagramGroups.begin(); it != anagramGroups.end(); ++it) {
+            result.push_back(it->second); 
+        }
+
+        return result; 
+    }
+
+    void setZeroes(vector<vector<int>>& matriz) {
+        int filas = matriz.size();
+        int columnas = matriz[0].size();
+        
+        vector<bool> filasConCero(filas, false);
+        vector<bool> columnasConCero(columnas, false);
+        
+        for (int i = 0; i < filas; ++i) {
+            for (int j = 0; j < columnas; ++j) {
+                if (matriz[i][j] == 0) {
+                    filasConCero[i] = true;
+                    columnasConCero[j] = true;
+                }
+            }
+        }
+        
+        for (int i = 0; i < filas; ++i) {
+            if (filasConCero[i]) {
+                for (int j = 0; j < columnas; ++j) {
+                    matriz[i][j] = 0;
+                }
+            }
+        }
+        
+        for (int j = 0; j < columnas; ++j) {
+            if (columnasConCero[j]) {
+                for (int i = 0; i < filas; ++i) {
+                    matriz[i][j] = 0;
+                }
+            }
+        }
+    }
+    
+
 };
 
 class LRUCache {
