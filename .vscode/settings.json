@@ -105,6 +105,7 @@
     "streambuf": "cpp",
     "typeinfo": "cpp",
     "queue": "cpp",
-    "map": "cpp"
+    "map": "cpp",
+    "sstream": "cpp"
   }
 }
